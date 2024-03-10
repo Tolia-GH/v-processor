@@ -9,6 +9,26 @@
 Раздел должен включать:
 
 - Описание синтаксиса. Рекомендуется использовать форму Бэкуса-Наура.
+
+```text
+<program> ::= [<section_data>] <section_text>
+<section_data> ::= "section .data" <data>*
+<data> ::= <comment> | <variable>
+<variable> ::= <name> ":" <value>
+<name> ::= ([A-Z,a-z,_]+[0-9]*)([A-Z,a-z,_]+[0-9]*)*
+<value> ::= <int> | <string>
+
+<section_text> ::= "section .text" <code>*
+<code> ::= <comment> | <label> | <instruction>
+<label> ::= "." <name> ":"
+
+<function> ::=
+<label> ::=
+<comment> ::= ";" <character>*
+
+<instruction> ::=
+```
+
 - Описание семантики. В первую очередь:
 
   - стратегия вычислений, 
