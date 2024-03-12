@@ -1,4 +1,4 @@
-from ISA import Register_Type, read_code, Instruction, Instruction_Type, de_char, char, MATH_INSTRUCTION, \
+from ISA import RegisterType, read_code, Instruction, InstructionType, de_char, char, MATH_INSTRUCTION, \
     STACK_INSTRUCTION, DATA_INSTRUCTION
 import re
 
@@ -13,7 +13,7 @@ MIN = -2 ** 31  # -2^31
 class Cell:
     def __init__(self):
         self.value = -1
-        self.ins = Instruction(Instruction_Type.ADD, [])
+        self.ins = Instruction(InstructionType.ADD, [])
 
 
 def check_string(re_exp: str, target: str) -> bool:
@@ -25,9 +25,9 @@ def check_string(re_exp: str, target: str) -> bool:
 
 
 class Register:
-    def __init__(self, type: Register_Type):
+    def __init__(self, type: RegisterType):
         self.name = type
-        if type == Register_Type.SP:
+        if type == RegisterType.SP:
             self.value = 256
         else:
             self.value = 0
@@ -63,13 +63,13 @@ class DataPath:
         self.input_buffer = Buffer(256)
         self.output_buffer = Buffer(256)
         self.registers = {
-            'BR': Register(Register_Type.BR),
-            'AC': Register(Register_Type.AC),
-            'SP': Register(Register_Type.SP),
-            'PS': Register(Register_Type.PS),
-            'IP': Register(Register_Type.IP),
-            'AR': Register(Register_Type.AR),
-            'IR': Register(Register_Type.IR)
+            'BR': Register(RegisterType.BR),
+            'AC': Register(RegisterType.AC),
+            'SP': Register(RegisterType.SP),
+            'PS': Register(RegisterType.PS),
+            'IP': Register(RegisterType.IP),
+            'AR': Register(RegisterType.AR),
+            'IR': Register(RegisterType.IR)
         }
         self.input_index = int(size * 3 / 4 - 1)
         self.output_index = self.input_index
@@ -320,20 +320,20 @@ class CPU:
         return self.alu.nzvc
 
     def ins_execute(self, ins: Instruction, position: str) -> int:
-        if ins.instruction == Instruction_Type['HLT']:
+        if ins.instruction == InstructionType['HLT']:
             return 1
         elif ins.instruction in MATH_INSTRUCTION:
-            if ins.instruction == Instruction_Type['ADD']:
+            if ins.instruction == InstructionType['ADD']:
                 self.math(ins, ALU.add)
                 self.datapath.set_value_register("PS", self.get_nzvc())
-            elif ins.instruction == Instruction_Type['SUB']:
+            elif ins.instruction == InstructionType['SUB']:
                 self.math(ins, ALU.min)
                 self.datapath.set_value_register("PS", self.get_nzvc())
-            elif ins.instruction == Instruction_Type['MUL']:
+            elif ins.instruction == InstructionType['MUL']:
                 self.math(ins, ALU.mul)
-            elif ins.instruction == Instruction_Type['DIV']:
+            elif ins.instruction == InstructionType['DIV']:
                 self.math(ins, ALU.div)
-            elif ins.instruction == Instruction_Type['INV']:
+            elif ins.instruction == InstructionType['INV']:
                 # -AC->AC, nzvc -> PS
                 self.alu.put_left(self.datapath.get_value_register("AC"))
                 self.tick_tick()
@@ -351,7 +351,7 @@ class CPU:
                 self.tick_tick()
         elif ins.instruction in DATA_INSTRUCTION:
             arg = ins.args[0]
-            if ins.instruction == Instruction_Type['LD']:
+            if ins.instruction == InstructionType['LD']:
                 assert arg != 'OUTPUT', 'Instruction LD can\'t call OUTPUT'
                 if arg != 'INPUT':
                     self.datapath.set_value_register('AC', self.addressing(ins))
@@ -385,7 +385,7 @@ class CPU:
                     self.datapath.output_buffer.write_pointer += 1
                     self.tick_tick()
         elif ins.instruction in STACK_INSTRUCTION:
-            if ins.instruction == Instruction_Type.PUSH:
+            if ins.instruction == InstructionType.PUSH:
                 # SP-1 -> SP
                 self.datapath.set_value_register('SP',self.datapath.get_value_register('SP') - 1)
                 self.tick_tick()
@@ -400,14 +400,14 @@ class CPU:
                 self.datapath.set_value_register('SP',self.datapath.get_value_register('SP') - 1)
                 self.tick_tick()
         else:
-            if ins.instruction == Instruction_Type.JMP:
+            if ins.instruction == InstructionType.JMP:
                 ## Decoder -> IP
                 arg = ins.args[0]
                 assert arg in self.fun[
                     position].keys(), "You are trying jump to a label which is not in his own function"
                 self.datapath.set_value_register("IP", self.fun[position][arg])
                 self.tick_tick()
-            elif ins.instruction == Instruction_Type.CALL:
+            elif ins.instruction == InstructionType.CALL:
                 # AC->BR save parameter
                 self.alu.put_left(self.datapath.get_value_register('AC'))
                 self.datapath.set_value_register("BR", self.alu.act(ALU.or_operation))
@@ -419,7 +419,7 @@ class CPU:
                 self.datapath.set_value_register("AC", self.alu.act(ALU.or_operation))
                 self.tick_tick()
                 # push
-                new_ins = Instruction(Instruction_Type.PUSH, [])
+                new_ins = Instruction(InstructionType.PUSH, [])
                 self.ins_execute(new_ins, position)
                 # Decoder -> IP
                 self.datapath.set_value_register("IP", self.fun[arg]['self'])
@@ -429,12 +429,12 @@ class CPU:
                 self.alu.put_left(self.datapath.get_value_register('BR'))
                 self.datapath.set_value_register("AC", self.alu.act(ALU.or_operation))
                 self.tick_tick()
-            elif ins.instruction == Instruction_Type.RET:
+            elif ins.instruction == InstructionType.RET:
                 # AC->BR make sure that result of function is saved
                 self.datapath.set_value_register("BR", self.datapath.get_value_register("AC"))
                 self.tick_tick()
                 # pop
-                new_ins = Instruction(Instruction_Type.POP, [])
+                new_ins = Instruction(InstructionType.POP, [])
                 self.ins_execute(new_ins, self.position[-1])
                 self.position.pop()
                 # AC -> IP
@@ -444,18 +444,18 @@ class CPU:
                 # BR->AC
                 self.datapath.set_value_register("AC", self.datapath.get_value_register("BR"))
                 self.tick_tick()
-            elif ins.instruction == Instruction_Type.JZ:
+            elif ins.instruction == InstructionType.JZ:
                 if self.datapath.get_value_register("PS") | Z == Z and self.datapath.get_value_register("PS")!=0:
-                    ins_2 = Instruction(Instruction_Type.JMP, args=ins.args)
+                    ins_2 = Instruction(InstructionType.JMP, args=ins.args)
                     self.ins_execute(ins_2, position)
-            elif ins.instruction == Instruction_Type.JS:
+            elif ins.instruction == InstructionType.JS:
                 if self.datapath.get_value_register("PS") | N == N and self.datapath.get_value_register("PS")!=0:
-                    ins_2 = Instruction(Instruction_Type.JMP, args=ins.args)
+                    ins_2 = Instruction(InstructionType.JMP, args=ins.args)
                     self.ins_execute(ins_2, position)
             # JNZ
             else:
                 if self.datapath.get_value_register("PS") != Z:
-                    ins_2 = Instruction(Instruction_Type.JMP, args=ins.args)
+                    ins_2 = Instruction(InstructionType.JMP, args=ins.args)
                     self.ins_execute(ins_2, position)
         return 0
 

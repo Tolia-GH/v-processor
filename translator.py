@@ -1,5 +1,5 @@
 import re
-from ISA import Instruction_Type,NO_ARGUMENT
+from ISA import InstructionType,NO_ARGUMENT
 
 
 def check_string(re_exp: str, target: str) -> bool:
@@ -104,8 +104,8 @@ def translate(source_name: str, target_name: str):
                     line = re.sub(r" +", " ", line)
                     split = line.split(" ")
                     split[0] = split[0].upper()
-                    assert split[0] in Instruction_Type.__members__,"Line {}, no such instrument".format(index)
-                    if Instruction_Type[split[0]] in NO_ARGUMENT:
+                    assert split[0] in InstructionType.__members__, "Line {}, no such instrument".format(index)
+                    if InstructionType[split[0]] in NO_ARGUMENT:
                         assert len(split) == 1,"Line {}, this instrument have no argument".format(index)
                     else:
                         assert len(split) == 2,"Line {}, only one argument allowed".format(index)
@@ -113,9 +113,9 @@ def translate(source_name: str, target_name: str):
                         if len(split) == 2:
                             if not check_string("^\'[A-Za-z]{1}\'$", split[1]):
                                 split[1] = split[1].upper()
-                            result = result +  str(instruction_index)+ " " + Instruction_Type[split[0]].value + " " + split[1] +" " + "\n"
+                            result = result + str(instruction_index) + " " + InstructionType[split[0]].value + " " + split[1] + " " + "\n"
                         else:
-                            result = result +  str(instruction_index)+ " " + Instruction_Type[split[0]].value +" " + "\n"
+                            result = result + str(instruction_index) + " " + InstructionType[split[0]].value + " " + "\n"
                         instruction_index += 1
             line = f.readline()
             index += 1

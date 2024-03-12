@@ -30,7 +30,7 @@ def char_var(i: str):
 
 
 @unique
-class Register_Type(Enum):
+class RegisterType(Enum):
     R1 = "R1"
     R2 = "R2"
     R3 = "R3"
@@ -45,45 +45,57 @@ class Register_Type(Enum):
 
 
 @unique
-class Instruction_Type(Enum):
+class InstructionType(Enum):
     # math
     ADD = "ADD"
     SUB = "SUB"
-    CMP = "CMP"
-    DIV = "DIV"
     MUL = "MUL"
+    DIV = "DIV"
+    XOR = "XOR"
+    MOD = "MOD"
+    CMP = "CMP"
     INV = "INV"
+    DEC = "DEC"
     # data control
-    LD = 'LD'
-    ST = 'ST'
+    MOV = 'MOV'
+    # LD = 'LD'
+    # ST = 'ST'
+
     # stack
     PUSH = "PUSH"
     POP = "POP"
-    # skip to somewhere
+
+    # jump
     JMP = "JMP"
-    JNZ = "JNZ"
+    JE = "JE"
+    JNE = "JNE"
     JZ = "JZ"
+    JNZ = "JNZ"
     JS = "JS"
-    CALL = "CALL"
-    RET = "RET"
+    JLE = "JLE"
+    JG = "JG"
+    JGE = "JGE"
+    # CALL = "CALL"
+    # RET = "RET"
+
     # STOP
     HLT = "HLT"
 
 
 MATH_INSTRUCTION = (
-    Instruction_Type.ADD, Instruction_Type.SUB, Instruction_Type.INV, Instruction_Type.CMP, Instruction_Type.DIV,
-    Instruction_Type.MUL)
-DATA_INSTRUCTION = (Instruction_Type.LD, Instruction_Type.ST)
-STACK_INSTRUCTION = (Instruction_Type.POP, Instruction_Type.PUSH)
+    InstructionType.ADD, InstructionType.SUB, InstructionType.INV, InstructionType.CMP, InstructionType.DIV,
+    InstructionType.MUL)
+DATA_INSTRUCTION = (InstructionType.LD, InstructionType.ST)
+STACK_INSTRUCTION = (InstructionType.POP, InstructionType.PUSH)
 JUMP_INSTRUCTION = (
-    Instruction_Type.JZ, Instruction_Type.JMP, Instruction_Type.JNZ, Instruction_Type.CALL, Instruction_Type.JS,
-    Instruction_Type.RET)
+    InstructionType.JZ, InstructionType.JMP, InstructionType.JNZ, InstructionType.CALL, InstructionType.JS,
+    InstructionType.RET)
 NO_ARGUMENT = (
-    Instruction_Type.PUSH, Instruction_Type.POP, Instruction_Type.RET, Instruction_Type.INV, Instruction_Type.HLT)
+    InstructionType.PUSH, InstructionType.POP, InstructionType.RET, InstructionType.INV, InstructionType.HLT)
 
 
 class Instruction:
-    def __init__(self, instruction: Instruction_Type, args: []):
+    def __init__(self, instruction: InstructionType, args: []):
         self.instruction = instruction
         self.args = args
 
@@ -126,7 +138,7 @@ def read_code(filename: str) -> {}:
                 ins: Instruction
                 if position == Position.INS:
                     term = line.split(" ")
-                    ins_type = Instruction_Type[term[1]]
+                    ins_type = InstructionType[term[1]]
                     while "" in term:
                         term.remove("")
                     if term[1] == 'HLT':
