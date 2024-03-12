@@ -5,29 +5,8 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="c630549f-3823-4781-b360-c63e2bc86141" name="Changes" comment="">
-      <change afterPath="$PROJECT_DIR$/asm/cat.asm" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/asm/hello.asm" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/asm/prob2.asm" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/asm/prob5.asm" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/asm/target" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/asm/test.txt" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/diary/cat.txt" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/diary/hello.txt" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/diary/prob2.txt" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/diary/prob5.txt" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/target/cat" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/target/hello" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/target/prob2" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/target/prob5" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/test_machine.py" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/test_translator.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/.idea/v-processor.iml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/v-processor.iml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/ISA.py" beforeDir="false" afterPath="$PROJECT_DIR$/ISA.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/README.md" beforeDir="false" afterPath="$PROJECT_DIR$/README.md" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/machine.py" beforeDir="false" afterPath="$PROJECT_DIR$/machine.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/pyproject.toml" beforeDir="false" afterPath="$PROJECT_DIR$/pyproject.toml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/translator.py" beforeDir="false" afterPath="$PROJECT_DIR$/translator.py" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -120,7 +99,7 @@
       <option name="number" value="Default" />
       <option name="presentableId" value="Default" />
       <updated>1710239609883</updated>
-      <workItem from="1710239611096" duration="7764000" />
+      <workItem from="1710239611096" duration="8600000" />
     </task>
     <servers />
   </component>

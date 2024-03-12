@@ -21,10 +21,16 @@
 <section_text> ::= "section .text" <code>*
 <code> ::= <comment> | <label> | <instruction>
 <label> ::= "." <name> ":"
-<instruction> ::= <command> <operand>+
-<operand> ::= <>
-
+<instruction> ::= <0arg_command> | <1arg_command> <operand> | <2arg_command> <operand> <operand>
+<operand> ::= <number> | <register> 
 <comment> ::= ";" <character>*
+
+<0arg_command> ::= "HLT"
+<1arg_command> ::= "INC" | "DEC" | "JMP" | "JZ" | "JE" | "JNE" | "JG" | "JGE" | "JL" | "JLE"
+<2arg_command> ::= "MOV" | "ADD" | "SUB" | "MUL" | "DIV" | "MOD" | "XOR" | "CMP" 
+<register> ::= "R1", "R2", "R3", "R4", "R5", "R6", "R7", "R8"
+<character> ::= [a-z, A_Z, _]+
+<number> ::= [0-9]+
 ```
 
 - Описание семантики. В первую очередь:
