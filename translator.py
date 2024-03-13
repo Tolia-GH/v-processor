@@ -62,14 +62,14 @@ def translate(source_name: str, target_name: str):
     instruction_index = 0
     last_fun = ""
     with open(source_name, "r") as f:
-        line = f.readline()
+        line = f.readline().strip()
         index += 1
         line = pre_translation(line)
         read_all_data = True
         if line == "SECTION .DATA":
             read_all_data = False
         while line and not read_all_data:
-            line = f.readline()
+            line = f.readline().strip()
             index += 1
             line = line.split(";")[0]
             line = re.sub(r"\t+", "", line)
@@ -83,7 +83,7 @@ def translate(source_name: str, target_name: str):
                 index)
             assert key not in variable.keys(), "Line {}:You can't declare a variable two or more times".format(index)
             variable[key] = value
-        line = f.readline()
+        line = f.readline().strip()
         index += 1
         line = pre_translation(line)
         is_first_fun = True
@@ -124,7 +124,7 @@ def translate(source_name: str, target_name: str):
                             result = result + str(instruction_index) + " " + InstructionType[
                                 split[0]].value + " " + "\n"
                         instruction_index += 1
-            line = f.readline()
+            line = f.readline().strip()
             index += 1
     with open(target_name, "w") as f:
         f.write(result)
