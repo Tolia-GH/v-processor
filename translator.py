@@ -45,8 +45,9 @@ def read_variable(line: str) -> tuple[str, str]:
     return key, value
 
 
-def pre_translation(line: str) -> str:
-    line = line.upper()
+def init_line(line: str) -> str:
+    line = line.strip()
+    # line = line.upper()
     line = line.split(";")[0]
     line = re.sub(r"\t+", "", line)
     line = re.sub(r"\n", "", line)
@@ -61,71 +62,75 @@ def translate(source_name: str, target_name: str):
     index = 0
     instruction_index = 0
     last_fun = ""
-    with open(source_name, "r") as f:
-        line = f.readline().strip()
+
+    in_section_data = True
+    is_first_fun = True
+
+    lines_source = open(source_name).read().split('\n')
+
+    # read each line of source file
+    while index < len(lines_source):
+        line = init_line(lines_source[index])  # read new line
         index += 1
-        line = pre_translation(line)
-        read_all_data = True
-        if line == "SECTION .DATA":
-            read_all_data = False
-        while line and not read_all_data:
-            line = f.readline().strip()
-            index += 1
-            line = line.split(";")[0]
-            line = re.sub(r"\t+", "", line)
-            line = re.sub(r"\n", "", line)
-            section = pre_translation(line)
-            if section == "SECTION .TEXT":
-                break
+
+        if line == "" or line == "\n":  # skip empty line
+            continue
+        if line.upper() == "SECTION .DATA":
+            in_section_data = True
+            continue
+        if line.upper() == "SECTION .TEXT":
+            in_section_data = False
+            continue
+
+        # read section data
+        if in_section_data:
             key, value = read_variable(line)
             key = key.upper()
             assert key != 'INPUT' and key != 'OUTPUT', "Line {}:You can't declare a variable name as INPUT or OUTPUT".format(
                 index)
             assert key not in variable.keys(), "Line {}:You can't declare a variable two or more times".format(index)
             variable[key] = value
-        line = f.readline().strip()
-        index += 1
-        line = pre_translation(line)
-        is_first_fun = True
-        while line:
-            if line != "" and line != "\n":
-                if check_string("^\S*:$", line):  # a function or label
-                    line = pre_translation(line)
-                    if check_string("^\.\S*:$", line):
-                        line = line.replace(":", "")
-                        label_in_fun[last_fun][line] = instruction_index
+
+        # read section text
+        else:
+            # a function or label
+            if check_string("^\S*:$", line):
+                line = line.upper()
+                # function
+                if check_string("^\.\S*:$", line):
+                    line = line.replace(":", "")
+                    label_in_fun[last_fun][line] = instruction_index
+                # label
+                else:
+                    line = line.replace(":", "")
+                    function_point[line] = instruction_index
+                    label_in_fun[line] = dict()
+                    last_fun = line
+                    if is_first_fun:
+                        assert last_fun == '_START', 'Your first function should be _start'
+                        is_first_fun = False
+
+            else:  # normal instructions
+                line = re.sub(r" +", " ", line)
+                split = line.split(" ")
+                split[0] = split[0].upper()
+                assert split[0] in InstructionType.__members__, "Line {}, no such instrument".format(index)
+                if InstructionType[split[0]] in NO_ARGUMENT:
+                    assert len(split) == 1, "Line {}, this instrument have no argument".format(index)
+                else:
+                    assert len(split) == 2, "Line {}, only one argument allowed".format(index)
+                if line != "":
+                    if len(split) == 2:
+                        if not check_string("^\'[A-Za-z]{1}\'$", split[1]):
+                            split[1] = split[1].upper()
+                        result = result + str(instruction_index) + " " + InstructionType[split[0]].value + " " + \
+                                 split[1] + " " + "\n"
                     else:
-                        line = line.replace(":", "")
-                        function_point[line] = instruction_index
-                        label_in_fun[line] = dict()
-                        last_fun = line
-                        if is_first_fun:
-                            assert last_fun == '_START', 'Your first function should be _start'
-                            is_first_fun = False
-                else:  # normal instructions
-                    line = line.split(";")[0]
-                    line = re.sub(r"\t+", "", line)
-                    line = re.sub(r"\n", "", line)
-                    line = re.sub(r" +", " ", line)
-                    split = line.split(" ")
-                    split[0] = split[0].upper()
-                    assert split[0] in InstructionType.__members__, "Line {}, no such instrument".format(index)
-                    if InstructionType[split[0]] in NO_ARGUMENT:
-                        assert len(split) == 1, "Line {}, this instrument have no argument".format(index)
-                    else:
-                        assert len(split) == 2, "Line {}, only one argument allowed".format(index)
-                    if line != "":
-                        if len(split) == 2:
-                            if not check_string("^\'[A-Za-z]{1}\'$", split[1]):
-                                split[1] = split[1].upper()
-                            result = result + str(instruction_index) + " " + InstructionType[split[0]].value + " " + \
-                                     split[1] + " " + "\n"
-                        else:
-                            result = result + str(instruction_index) + " " + InstructionType[
-                                split[0]].value + " " + "\n"
-                        instruction_index += 1
-            line = f.readline().strip()
-            index += 1
+                        result = result + str(instruction_index) + " " + InstructionType[
+                            split[0]].value + " " + "\n"
+                    instruction_index += 1
+
+    # write target file
     with open(target_name, "w") as f:
         f.write(result)
         f.write("FUNCTION\n")
@@ -146,7 +151,7 @@ def translate(source_name: str, target_name: str):
         while index < instruction_index:
             index += 1
             line = f.readline()
-            line = pre_translation(line)
+            line = init_line(line)
             term = line.split(" ")[1:]
             while "" in term:
                 term.remove("")
@@ -158,6 +163,5 @@ def translate(source_name: str, target_name: str):
 
 
 if __name__ == "__main__":
-
     assert len(sys.argv) == 3, 'Please only input the name of source file and target file'
     translate(sys.argv[1], sys.argv[2])
