@@ -58,8 +58,8 @@ class InstructionType(Enum):
     DEC = "DEC"
     # data control
     MOV = 'MOV'
-    # LD = 'LD'
-    # ST = 'ST'
+    LD = 'LD'
+    ST = 'ST'
 
     # stack
     PUSH = "PUSH"
@@ -75,23 +75,20 @@ class InstructionType(Enum):
     JLE = "JLE"
     JG = "JG"
     JGE = "JGE"
-    # CALL = "CALL"
-    # RET = "RET"
+    CALL = "CALL"
+    RET = "RET"
 
     # STOP
     HLT = "HLT"
 
 
-MATH_INSTRUCTION = (
-    InstructionType.ADD, InstructionType.SUB, InstructionType.INV, InstructionType.CMP, InstructionType.DIV,
-    InstructionType.MUL)
+MATH_INSTRUCTION = (InstructionType.ADD, InstructionType.SUB, InstructionType.INV, InstructionType.CMP,InstructionType.DIV,InstructionType.MUL)
 DATA_INSTRUCTION = (InstructionType.LD, InstructionType.ST)
-STACK_INSTRUCTION = (InstructionType.POP, InstructionType.PUSH)
-JUMP_INSTRUCTION = (
-    InstructionType.JZ, InstructionType.JMP, InstructionType.JNZ, InstructionType.CALL, InstructionType.JS,
-    InstructionType.RET)
-NO_ARGUMENT = (
-    InstructionType.PUSH, InstructionType.POP, InstructionType.RET, InstructionType.INV, InstructionType.HLT)
+STACK_INSTRUCTION = (InstructionType.POP,InstructionType.PUSH)
+JUMP_INSTRUCTION = (InstructionType.JZ, InstructionType.JMP, InstructionType.JNZ, InstructionType.CALL, InstructionType.JS, InstructionType.RET)
+NO_ARGUMENT = (InstructionType.PUSH, InstructionType.POP, InstructionType.RET, InstructionType.INV, InstructionType.HLT)
+
+
 
 
 class Instruction:

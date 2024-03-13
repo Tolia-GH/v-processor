@@ -1,5 +1,6 @@
 import re
-from ISA import InstructionType,NO_ARGUMENT
+import sys
+from ISA import InstructionType, NO_ARGUMENT
 
 
 def check_string(re_exp: str, target: str) -> bool:
@@ -15,29 +16,32 @@ def check_string(re_exp: str, target: str) -> bool:
     else:
         return False
 
+
 def read_variable(line: str) -> tuple[str, str]:
-    assert check_string("^.*: *0 *$",line) or check_string("^.*: *[1-9]+[0-9]* *$", line) or check_string("^.*: *\".*\" *, *[1-9]+[0-9]* *$", line) or check_string("^.*: *\".*\" *$", line), "Illegal variable {}".format(line)
+    assert check_string("^.*: *0 *$", line) or check_string("^.*: *[1-9]+[0-9]* *$", line) or check_string(
+        "^.*: *\".*\" *, *[1-9]+[0-9]* *$", line) or check_string("^.*: *\".*\" *$",
+                                                                  line), "Illegal variable {}".format(line)
     key = line.split(":", 1)[0]
     value = line.split(":", 1)[1]
-    if check_string("^.*: *-?[1-9]+[0-9]* *$", line): ##数字
+    if check_string("^.*: *-?[1-9]+[0-9]* *$", line):  # 数字
         key = re.findall("\S*", key)[0]
         value = re.findall("-?[1-9]+[0-9]*", value)[0]
-    elif check_string("^.*: *0 *$",line):
+    elif check_string("^.*: *0 *$", line):
         key = re.findall("\S*", key)[0]
         value = '0'
-    elif  check_string("^.*: *\".*\" *$", line): ##字符串
+    elif check_string("^.*: *\".*\" *$", line):  # 字符串
         keys = re.findall("\S*", key)
         key = keys[0]
         value = re.findall("\".*\"", value)[0]
-        value = value + "," + str(len(value)-2)
+        value = value + "," + str(len(value) - 2)
     else:
         keys = re.findall("\S*", key)
         key = keys[0]
-        values = value.rsplit(',',1)
-        left = values[0].rsplit("\"",1)
+        values = value.rsplit(',', 1)
+        left = values[0].rsplit("\"", 1)
         a = left[0] + "\""
-        b = re.sub(r" ","", values[1])
-        value = a + "," +b
+        b = re.sub(r" ", "", values[1])
+        value = a + "," + b
     return key, value
 
 
@@ -52,7 +56,7 @@ def pre_translation(line: str) -> str:
 def translate(source_name: str, target_name: str):
     result = ""
     variable = dict()
-    function_point = dict() ## functions
+    function_point = dict()  # functions
     label_in_fun = dict()
     index = 0
     instruction_index = 0
@@ -71,11 +75,12 @@ def translate(source_name: str, target_name: str):
             line = re.sub(r"\t+", "", line)
             line = re.sub(r"\n", "", line)
             section = pre_translation(line)
-            if (section == "SECTION .TEXT"):
+            if section == "SECTION .TEXT":
                 break
             key, value = read_variable(line)
             key = key.upper()
-            assert key != 'INPUT' and key!='OUTPUT', "Line {}:You can't declare a variable name as INPUT or OUTPUT".format(index)
+            assert key != 'INPUT' and key != 'OUTPUT', "Line {}:You can't declare a variable name as INPUT or OUTPUT".format(
+                index)
             assert key not in variable.keys(), "Line {}:You can't declare a variable two or more times".format(index)
             variable[key] = value
         line = f.readline()
@@ -84,20 +89,20 @@ def translate(source_name: str, target_name: str):
         is_first_fun = True
         while line:
             if line != "" and line != "\n":
-                if check_string("^\S*:$", line): ## a function or label
+                if check_string("^\S*:$", line):  # a function or label
                     line = pre_translation(line)
                     if check_string("^\.\S*:$", line):
-                        line = line.replace(":","")
+                        line = line.replace(":", "")
                         label_in_fun[last_fun][line] = instruction_index
                     else:
-                        line = line.replace(":","")
+                        line = line.replace(":", "")
                         function_point[line] = instruction_index
                         label_in_fun[line] = dict()
                         last_fun = line
                         if is_first_fun:
-                            assert last_fun == '_START','Your first function should be _start'
+                            assert last_fun == '_START', 'Your first function should be _start'
                             is_first_fun = False
-                else: ## normal instructions
+                else:  # normal instructions
                     line = line.split(";")[0]
                     line = re.sub(r"\t+", "", line)
                     line = re.sub(r"\n", "", line)
@@ -106,16 +111,18 @@ def translate(source_name: str, target_name: str):
                     split[0] = split[0].upper()
                     assert split[0] in InstructionType.__members__, "Line {}, no such instrument".format(index)
                     if InstructionType[split[0]] in NO_ARGUMENT:
-                        assert len(split) == 1,"Line {}, this instrument have no argument".format(index)
+                        assert len(split) == 1, "Line {}, this instrument have no argument".format(index)
                     else:
-                        assert len(split) == 2,"Line {}, only one argument allowed".format(index)
+                        assert len(split) == 2, "Line {}, only one argument allowed".format(index)
                     if line != "":
                         if len(split) == 2:
                             if not check_string("^\'[A-Za-z]{1}\'$", split[1]):
                                 split[1] = split[1].upper()
-                            result = result + str(instruction_index) + " " + InstructionType[split[0]].value + " " + split[1] + " " + "\n"
+                            result = result + str(instruction_index) + " " + InstructionType[split[0]].value + " " + \
+                                     split[1] + " " + "\n"
                         else:
-                            result = result + str(instruction_index) + " " + InstructionType[split[0]].value + " " + "\n"
+                            result = result + str(instruction_index) + " " + InstructionType[
+                                split[0]].value + " " + "\n"
                         instruction_index += 1
             line = f.readline()
             index += 1
@@ -134,7 +141,7 @@ def translate(source_name: str, target_name: str):
         for i in variable:
             line = i + ":" + variable[i] + "\n"
             f.write(line)
-    with open(target_name,"r") as f:
+    with open(target_name, "r") as f:
         index = 0
         while index < instruction_index:
             index += 1
@@ -144,13 +151,13 @@ def translate(source_name: str, target_name: str):
             while "" in term:
                 term.remove("")
             print(term)
-            ##a = check_ins(term, label_in_fun,function_point,index - 1),\
-            ##    "Input illegal instruction or parameter".format(index)
+            # a = check_ins(term, label_in_fun,function_point,index - 1),\
+            #    "Input illegal instruction or parameter".format(index)
 
-    ##print(result)
+    # print(result)
 
 
 if __name__ == "__main__":
-    import sys
-    assert len(sys.argv) == 3,'Please only input the name of source file and target file'
-    translate(sys.argv[0], sys.argv[1])
+
+    assert len(sys.argv) == 3, 'Please only input the name of source file and target file'
+    translate(sys.argv[1], sys.argv[2])

@@ -78,8 +78,8 @@ class DataPath:
             with open(inputfile) as f:
                 c = f.read()
                 for i in c:
-                    assert self.input_index < self.size,'Input file too large!'
-                    self.set_value_memory(self.input_index,char[i])
+                    assert self.input_index < self.size, 'Input file too large!'
+                    self.set_value_memory(self.input_index, char[i])
                     self.input_index += 1
 
     def set_value_memory(self, index: int, value: int):
@@ -111,7 +111,7 @@ class DataPath:
         print("BR:%s, AC:%s, SP:%s, PS:%s, IP:%s, AR:%s, IR:%s" %
               (self.get_string_register('BR'), self.get_string_register('AC'),
                self.get_string_register('SP'), self.get_string_register('PS'), self.get_string_register('IP'),
-               self.get_string_register('IP'), self.registers['IR'].to_string()),end="")
+               self.get_string_register('IP'), self.registers['IR'].to_string()), end="")
 
 
 class ALU:
@@ -269,7 +269,7 @@ class CPU:
         # IP + 1 -> IP, [AR] -> IR
         self.datapath.set_value_register("IP", self.datapath.get_value_register('IP') + 1)
         self.tick_tick()
-        self.datapath.set_value_register('IR',self.datapath.memory[self.datapath.get_value_register("AR")].ins)
+        self.datapath.set_value_register('IR', self.datapath.memory[self.datapath.get_value_register("AR")].ins)
 
     def read_var(self, var: str):
         # VAR -> AR
@@ -304,7 +304,7 @@ class CPU:
         self.tick_tick()
         if opr == ALU.div:
             # result ->　AC
-            r= self.alu.act(opr)
+            r = self.alu.act(opr)
             self.datapath.set_value_register("AC", r)
             self.tick_tick()
         else:
@@ -362,7 +362,8 @@ class CPU:
                     self.datapath.set_value_register("AR", self.datapath.output_index)
                     self.datapath.output_index += 1
                     self.tick_tick()
-                    self.datapath.set_value_register("AC",self.datapath.memory[self.datapath.get_value_register('AR')].value)
+                    self.datapath.set_value_register("AC",
+                                                     self.datapath.memory[self.datapath.get_value_register('AR')].value)
                     self.tick_tick()
             # ST
             else:
@@ -370,24 +371,26 @@ class CPU:
                 if arg != 'OUTPUT':
                     assert arg in self.var.keys() or check_string("^[1-9][0-9]*",
                                                                   arg), 'You have to declare where you want to save the value by declaring a variable or address'
-                    ## arg ->　ar
+                    # arg ->　ar
                     if arg in self.var.keys():
                         self.alu.put_right(self.var[arg])
                     else:
                         self.alu.put_right(int(arg))
                     self.datapath.set_value_register("AR", self.alu.act(ALU.or_operation))
-                    ## AC -> [AR]
-                    self.datapath.set_value_memory(self.datapath.get_value_register("AR"), self.datapath.get_value_register("AC"))
+                    # AC -> [AR]
+                    self.datapath.set_value_memory(self.datapath.get_value_register("AR"),
+                                                   self.datapath.get_value_register("AC"))
                     self.tick_tick()
                 else:
                     # AC -> outputbuffer
-                    self.datapath.output_buffer.buf[self.datapath.output_buffer.write_pointer] = self.datapath.get_value_register('AC')
+                    self.datapath.output_buffer.buf[
+                        self.datapath.output_buffer.write_pointer] = self.datapath.get_value_register('AC')
                     self.datapath.output_buffer.write_pointer += 1
                     self.tick_tick()
         elif ins.instruction in STACK_INSTRUCTION:
             if ins.instruction == InstructionType.PUSH:
                 # SP-1 -> SP
-                self.datapath.set_value_register('SP',self.datapath.get_value_register('SP') - 1)
+                self.datapath.set_value_register('SP', self.datapath.get_value_register('SP') - 1)
                 self.tick_tick()
                 # AC -> STACK[SP]
                 self.datapath.stack[self.datapath.get_value_register("SP")] = self.datapath.get_value_register("AC")
@@ -397,11 +400,11 @@ class CPU:
                 self.datapath.set_value_register("AC", self.datapath.stack[self.datapath.get_value_register("SP")])
                 self.tick_tick()
                 # SP + 1 -> SP
-                self.datapath.set_value_register('SP',self.datapath.get_value_register('SP') - 1)
+                self.datapath.set_value_register('SP', self.datapath.get_value_register('SP') - 1)
                 self.tick_tick()
         else:
             if ins.instruction == InstructionType.JMP:
-                ## Decoder -> IP
+                # Decoder -> IP
                 arg = ins.args[0]
                 assert arg in self.fun[
                     position].keys(), "You are trying jump to a label which is not in his own function"
@@ -445,11 +448,11 @@ class CPU:
                 self.datapath.set_value_register("AC", self.datapath.get_value_register("BR"))
                 self.tick_tick()
             elif ins.instruction == InstructionType.JZ:
-                if self.datapath.get_value_register("PS") | Z == Z and self.datapath.get_value_register("PS")!=0:
+                if self.datapath.get_value_register("PS") | Z == Z and self.datapath.get_value_register("PS") != 0:
                     ins_2 = Instruction(InstructionType.JMP, args=ins.args)
                     self.ins_execute(ins_2, position)
             elif ins.instruction == InstructionType.JS:
-                if self.datapath.get_value_register("PS") | N == N and self.datapath.get_value_register("PS")!=0:
+                if self.datapath.get_value_register("PS") | N == N and self.datapath.get_value_register("PS") != 0:
                     ins_2 = Instruction(InstructionType.JMP, args=ins.args)
                     self.ins_execute(ins_2, position)
             # JNZ
@@ -464,10 +467,10 @@ class CPU:
         self.read_ins()
         ins = self.datapath.get_value_register("IR")
         result = self.ins_execute(ins, position)
-        print("DEBUG:root:{ ",end="")
-        print("Tick:{}".format(self.tick),end=", ")
+        print("DEBUG:root:{ ", end="")
+        print("Tick:{}".format(self.tick), end=", ")
         self.datapath.print_registers()
-        print(" }",end = "  ")
+        print(" }", end="  ")
         print(ins.to_string())
         return result
 
@@ -488,7 +491,7 @@ class CPU:
                 if i == -1:
                     output_result = False
             if i != -1:
-                print(de_char[i],end="")
+                print(de_char[i], end="")
                 result = result + de_char[i]
             else:
                 break
@@ -501,7 +504,7 @@ class CPU:
 
 def start(sourcefile, inputfile):
     program = read_code(sourcefile)
-    datapath = DataPath(256,inputfile)
+    datapath = DataPath(256, inputfile)
     cpu = CPU(program=program, datapath=datapath)
     cpu.decode()
     out = cpu.run()
