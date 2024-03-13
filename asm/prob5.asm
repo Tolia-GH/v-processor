@@ -11,6 +11,20 @@ ld a
 st arg1
 ld b
 st arg2
+call find_gcf
+st temp
+ld a
+mul b
+div temp
+st a
+ld b
+add #1
+st b
+cmp #21
+jnz .loop
+ld a
+HLT
+find_gcf:
 .start:
 ld arg1;find mod
 div arg2
@@ -31,15 +45,3 @@ jmp .start
 .found:
 ld arg2
 ret
-st temp
-ld a
-mul b
-div temp
-st a
-ld b
-add #1
-st b
-cmp #21
-jnz .loop
-ld a
-HLT
