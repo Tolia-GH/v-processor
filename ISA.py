@@ -1,3 +1,4 @@
+import re
 from enum import Enum, unique
 
 
@@ -13,37 +14,41 @@ class RegisterType(Enum):
     PS = "PS"  # NZVC
     SP = "SP"  # 堆栈
     AR = "AR"  # 地址
+
     IR = "IR"
 
 
 @unique
-class InstructionType(Enum):
+class Opcode(Enum):
     # math
-    ADD = "ADD"
-    SUB = "SUB"
-    MUL = "MUL"
-    DIV = "DIV"
-    XOR = "XOR"
-    MOD = "MOD"
-    CMP = "CMP"
-    INV = "INV"
-    DEC = "DEC"
+    ADD = "ADD"  # ADD REG1, REG2: REG1 = REG1 + REG2
+    SUB = "SUB"  # SUB REG1, REG2: REG1 = REG1 - REG2
+    MUL = "MUL"  # MUL REG1, REG2: REG1 = REG1 * REG2
+    DIV = "DIV"  # DIV REG1, REG2: REG1 = REG1 / REG2
+    XOR = "XOR"  # XOR REG1, REG2: REG1 = REG1 xor REG2
+    MOD = "MOD"  # MOD REG1, REG2: REG1 = REG1 % REG2
+    CMP = "CMP"  # CMP REG1, REG2: NZVC = REG1 - REG2
+    INV = "INV"  # INV REG: REG = REG + 1
+    DEC = "DEC"  # DEC REG: REG = REG - 1
+
     # data control
-    MOV = 'MOV'
-    LD = 'LD'
-    ST = 'ST'
+    MOV = 'MOV'  # MOV REG1, REG2: REG1 = REG2
+    LD = 'LD'  # LD REG: AC = REG
+    ST = 'ST'  # ST REG: REG = AC
+    IN = 'IN'  # IN
+    OUT = 'OUT'  # OUT
 
     # stack
-    PUSH = "PUSH"
-    POP = "POP"
+    PUSH = "PUSH"  # PUSH REG: stack(SP) = REG, SP - 1
+    POP = "POP"  # POP REG: REG = stack(SP), SP + 1
 
     # jump
-    JMP = "JMP"
+    JMP = "JMP"  # JMP LABEL: IP = (LABEL)
     JE = "JE"
     JNE = "JNE"
     JZ = "JZ"
     JNZ = "JNZ"
-    JS = "JS"
+    JL = "JL"
     JLE = "JLE"
     JG = "JG"
     JGE = "JGE"
@@ -55,23 +60,45 @@ class InstructionType(Enum):
 
 
 MATH_INSTRUCTION = (
-    InstructionType.ADD, InstructionType.SUB,
-    InstructionType.INV, InstructionType.CMP,
-    InstructionType.DIV, InstructionType.MUL)
-DATA_INSTRUCTION = (InstructionType.LD, InstructionType.ST)
-STACK_INSTRUCTION = (InstructionType.POP, InstructionType.PUSH)
+    Opcode.ADD, Opcode.SUB, Opcode.MUL,
+    Opcode.DIV, Opcode.XOR, Opcode.MOD,
+    Opcode.CMP, Opcode.INV, Opcode.DEC
+)
+DATA_INSTRUCTION = (
+    Opcode.MOV, Opcode.LD, Opcode.ST,
+    Opcode.IN, Opcode.OUT
+)
+STACK_INSTRUCTION = (
+    Opcode.POP, Opcode.PUSH
+)
 JUMP_INSTRUCTION = (
-    InstructionType.JZ, InstructionType.JMP,
-    InstructionType.JNZ, InstructionType.CALL,
-    InstructionType.JS, InstructionType.RET)
+    Opcode.JMP, Opcode.JE, Opcode.JNE,
+    Opcode.JZ, Opcode.JNZ, Opcode.JL,
+    Opcode.JLE, Opcode.JG, Opcode.JGE,
+    Opcode.CALL, Opcode.RET
+)
+
 NO_ARGUMENT = (
-    InstructionType.PUSH, InstructionType.POP,
-    InstructionType.RET, InstructionType.INV,
-    InstructionType.HLT)
+    Opcode.HLT, Opcode.IN, Opcode.OUT,
+    Opcode.RET
+)
+ONE_ARGUMENT = (
+    Opcode.INV, Opcode.DEC, Opcode.LD,
+    Opcode.ST, Opcode.POP, Opcode.PUSH,
+    Opcode.JMP, Opcode.JE, Opcode.JNE,
+    Opcode.JZ, Opcode.JNZ, Opcode.JL,
+    Opcode.JLE, Opcode.JG, Opcode.JGE,
+    Opcode.CALL,
+)
+TWO_ARGUMENT = (
+    Opcode.ADD, Opcode.SUB, Opcode.MUL,
+    Opcode.DIV, Opcode.XOR, Opcode.MOD,
+    Opcode.CMP, Opcode.MOV,
+)
 
 
 class Instruction:
-    def __init__(self, instruction: InstructionType, args: []):
+    def __init__(self, instruction: Opcode, args: []):
         self.instruction = instruction
         self.args = args
 
@@ -120,7 +147,7 @@ def read_code(filename: str) -> {}:
             ins: Instruction
             if code_type == CodeType.INS:
                 term = line.split(" ")
-                ins_type = InstructionType[term[1]]
+                ins_type = Opcode[term[1]]  # get opcode
                 while "" in term:
                     term.remove("")
                 if term[1] == 'HLT':
@@ -146,6 +173,10 @@ def read_code(filename: str) -> {}:
                 program['Variable'][term[0]] = term[1]
 
     return program
+
+
+def is_match(re_exp: str, string: str) -> bool:
+    return bool(re.search(re_exp, string))
 
 
 char = {

@@ -2,17 +2,13 @@ import re
 import sys
 from enum import unique, Enum
 
-from ISA import InstructionType, NO_ARGUMENT
+from ISA import Opcode, NO_ARGUMENT, ONE_ARGUMENT, TWO_ARGUMENT, is_match
 
 
 @unique
 class Section(Enum):
     DATA = 1
     TEXT = 2
-
-
-def is_match(re_exp: str, string: str) -> bool:
-    return bool(re.search(re_exp, string))
 
 
 def is_valid_variable(line: str) -> bool:
@@ -120,23 +116,45 @@ def translate(source_name: str, target_name: str):
             # handle normal instruction
             else:
                 line = re.sub(r" +", " ", line)
-                split = line.split(" ")
-                split[0] = split[0].upper()
-                assert split[0] in InstructionType.__members__, "Line {}, no such instrument".format(index)
-                if InstructionType[split[0]] in NO_ARGUMENT:
-                    assert len(split) == 1, "Line {}, this instrument have no argument".format(index)
+                code_arr = line.split(" ", 1)
+                code_arr[0] = code_arr[0].upper()
+
+                if len(code_arr) > 1:
+                    code_arr[1:] = code_arr[1].split(",")
+
+                for i in range(0, len(code_arr)):
+                    code_arr[i] = code_arr[i].strip()
+                    i += 1
+
+                assert code_arr[0] in Opcode.__members__, "Line {}, no such instrument".format(index)
+                if Opcode[code_arr[0]] in NO_ARGUMENT:
+                    assert len(code_arr) == 1, "Line {}, this instrument have no argument".format(index)
+                elif Opcode[code_arr[0]] in ONE_ARGUMENT:
+                    assert len(code_arr) == 2, "Line {}, only one argument allowed".format(index)
+                elif Opcode[code_arr[0]] in TWO_ARGUMENT:
+                    assert len(code_arr) == 3, "Line {}, only two argument allowed".format(index)
                 else:
-                    assert len(split) == 2, "Line {}, only one argument allowed".format(index)
-                if line != "":
-                    if len(split) == 2:
-                        if not is_match("^\'[A-Za-z]{1}\'$", split[1]):
-                            split[1] = split[1].upper()
-                        result = result + str(instruction_index) + " " + InstructionType[split[0]].value + " " + \
-                                 split[1] + " " + "\n"
-                    else:
-                        result = result + str(instruction_index) + " " + InstructionType[
-                            split[0]].value + " " + "\n"
-                    instruction_index += 1
+                    assert code_arr[0] == "HLT", "Line {}, wrong argument".format(index)
+
+                if len(code_arr) == 3:
+                    if not is_match("^\'[A-Za-z]{1}\'$", code_arr[1]):
+                        code_arr[1] = code_arr[1].upper()
+                    if not is_match("^\'[A-Za-z]{1}\'$", code_arr[2]):
+                        code_arr[2] = code_arr[2].upper()
+                    result = (result + str(instruction_index) + " "
+                              + Opcode[code_arr[0]].value + " "
+                              + code_arr[1] + " "
+                              + code_arr[2] + " " + "\n")
+                elif len(code_arr) == 2:
+                    if not is_match("^\'[A-Za-z]{1}\'$", code_arr[1]):
+                        code_arr[1] = code_arr[1].upper()
+                    result = (result + str(instruction_index) + " "
+                              + Opcode[code_arr[0]].value
+                              + " " + code_arr[1] + " " + "\n")
+                else:
+                    result = (result + str(instruction_index) + " "
+                              + Opcode[code_arr[0]].value + " " + "\n")
+                instruction_index += 1
 
     # write target file
     with open(target_name, "w") as f:
