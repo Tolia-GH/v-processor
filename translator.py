@@ -1,6 +1,7 @@
 import re
 import sys
 from enum import unique, Enum
+
 from ISA import InstructionType, NO_ARGUMENT
 
 
@@ -10,16 +11,16 @@ class Section(Enum):
     TEXT = 2
 
 
-def is_match(re_exp: str, target: str) -> bool:
-    return bool(re.search(re_exp, target))
+def is_match(re_exp: str, string: str) -> bool:
+    return bool(re.search(re_exp, string))
 
 
 def is_valid_variable(line: str) -> bool:
     if (
-        is_match("^.*: *0 *$", line) or
-        is_match("^.*: *[1-9]+[0-9]* *$", line) or
-        is_match("^.*: *\".*\" *, *[1-9]+[0-9]* *$", line) or
-        is_match("^.*: *\".*\" *$", line)
+            is_match("^.*: *0 *$", line) or
+            is_match("^.*: *[1-9]+[0-9]* *$", line) or
+            is_match("^.*: *\".*\" *, *[1-9]+[0-9]* *$", line) or
+            is_match("^.*: *\".*\" *$", line)
     ):
         return True
     else:
@@ -66,8 +67,8 @@ def translate(source_name: str, target_name: str):
     variable = dict()
     function_point = dict()  # functions
     label_in_fun = dict()
-    index = 0
     instruction_index = 0
+    index = 0
     last_fun = ""
 
     section = Section.DATA
@@ -140,16 +141,16 @@ def translate(source_name: str, target_name: str):
     # write target file
     with open(target_name, "w") as f:
         f.write(result)
-        f.write("\nFUNCTION\n")
+        f.write("FUNCTION\n")
         for i in function_point:
             line = i + ":" + str(function_point[i]) + "\n"
             f.write(line)
-        f.write("\nLABEL\n")
+        f.write("LABEL\n")
         for i in label_in_fun:
             for k in label_in_fun[i]:
                 line = i + ":" + k + ":" + str(label_in_fun[i][k]) + "\n"
                 f.write(line)
-        f.write("\nVARIABLE\n")
+        f.write("VARIABLE\n")
         for i in variable:
             line = i + ":" + variable[i] + "\n"
             f.write(line)
@@ -171,4 +172,5 @@ def translate(source_name: str, target_name: str):
 
 if __name__ == "__main__":
     assert len(sys.argv) == 3, 'Please only input the name of source file and target file'
-    translate(sys.argv[1], sys.argv[2])
+    _, source, target = sys.argv
+    translate(source, target)
