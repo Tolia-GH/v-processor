@@ -3,33 +3,23 @@ import sys
 from ISA import InstructionType, NO_ARGUMENT
 
 
-def check_string(re_exp: str, target: str) -> bool:
-    """
-    This function is used to check if target matches re_exp
-    :param re_exp: str, regex
-    :param target: str, just a string
-    :return: bool
-    """
-    res = re.search(re_exp, target)
-    if res:
-        return True
-    else:
-        return False
+def is_match(re_exp: str, target: str) -> bool:
+    return bool(re.search(re_exp, target))
 
 
 def read_variable(line: str) -> tuple[str, str]:
-    assert check_string("^.*: *0 *$", line) or check_string("^.*: *[1-9]+[0-9]* *$", line) or check_string(
-        "^.*: *\".*\" *, *[1-9]+[0-9]* *$", line) or check_string("^.*: *\".*\" *$",
-                                                                  line), "Illegal variable {}".format(line)
+    assert is_match("^.*: *0 *$", line) or is_match("^.*: *[1-9]+[0-9]* *$", line) or is_match(
+        "^.*: *\".*\" *, *[1-9]+[0-9]* *$", line) or is_match("^.*: *\".*\" *$",
+                                                              line), "Illegal variable {}".format(line)
     key = line.split(":", 1)[0]
     value = line.split(":", 1)[1]
-    if check_string("^.*: *-?[1-9]+[0-9]* *$", line):  # 数字
+    if is_match("^.*: *-?[1-9]+[0-9]* *$", line):  # number
         key = re.findall("\S*", key)[0]
         value = re.findall("-?[1-9]+[0-9]*", value)[0]
-    elif check_string("^.*: *0 *$", line):
+    elif is_match("^.*: *0 *$", line):
         key = re.findall("\S*", key)[0]
         value = '0'
-    elif check_string("^.*: *\".*\" *$", line):  # 字符串
+    elif is_match("^.*: *\".*\" *$", line):  # string
         keys = re.findall("\S*", key)
         key = keys[0]
         value = re.findall("\".*\"", value)[0]
@@ -46,9 +36,8 @@ def read_variable(line: str) -> tuple[str, str]:
 
 
 def init_line(line: str) -> str:
-    line = line.strip()
-    # line = line.upper()
     line = line.split(";")[0]
+    line = line.strip()
     line = re.sub(r"\t+", "", line)
     line = re.sub(r"\n", "", line)
     return line
@@ -93,11 +82,11 @@ def translate(source_name: str, target_name: str):
 
         # read section text
         else:
-            # a function or label
-            if check_string("^\S*:$", line):
+            # handle function or label
+            if is_match("^\S*:$", line):
                 line = line.upper()
                 # function
-                if check_string("^\.\S*:$", line):
+                if is_match("^\.\S*:$", line):
                     line = line.replace(":", "")
                     label_in_fun[last_fun][line] = instruction_index
                 # label
@@ -109,8 +98,8 @@ def translate(source_name: str, target_name: str):
                     if is_first_fun:
                         assert last_fun == '_START', 'Your first function should be _start'
                         is_first_fun = False
-
-            else:  # normal instructions
+            # handle normal instruction
+            else:
                 line = re.sub(r" +", " ", line)
                 split = line.split(" ")
                 split[0] = split[0].upper()
@@ -121,7 +110,7 @@ def translate(source_name: str, target_name: str):
                     assert len(split) == 2, "Line {}, only one argument allowed".format(index)
                 if line != "":
                     if len(split) == 2:
-                        if not check_string("^\'[A-Za-z]{1}\'$", split[1]):
+                        if not is_match("^\'[A-Za-z]{1}\'$", split[1]):
                             split[1] = split[1].upper()
                         result = result + str(instruction_index) + " " + InstructionType[split[0]].value + " " + \
                                  split[1] + " " + "\n"

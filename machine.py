@@ -1,5 +1,4 @@
-from ISA import RegisterType, read_code, Instruction, InstructionType, de_char, char, MATH_INSTRUCTION, \
-    STACK_INSTRUCTION, DATA_INSTRUCTION
+from ISA import *
 import re
 
 N = 1
@@ -110,8 +109,9 @@ class DataPath:
     def print_registers(self):
         print("BR:%s, AC:%s, SP:%s, PS:%s, IP:%s, AR:%s, IR:%s" %
               (self.get_string_register('BR'), self.get_string_register('AC'),
-               self.get_string_register('SP'), self.get_string_register('PS'), self.get_string_register('IP'),
-               self.get_string_register('IP'), self.registers['IR'].to_string()), end="")
+               self.get_string_register('SP'), self.get_string_register('PS'),
+               self.get_string_register('IP'), self.get_string_register('IP'),
+               self.registers['IR'].to_string()), end="")
 
 
 class ALU:
@@ -475,8 +475,8 @@ class CPU:
         return result
 
     def run(self):
-        start = '_START'
-        self.position.append(start)
+        head_instr = '_START'  # set the start position of program
+        self.position.append(head_instr)
         while True:
             r = self.run_ins(position=self.position[-1])
             if r == 1:
@@ -503,11 +503,11 @@ class CPU:
 
 
 def start(sourcefile, input_file):
-    program = read_code(sourcefile)
-    data_path = DataPath(256, input_file)
-    cpu = CPU(program=program, data_path=data_path)
+    program = read_code(sourcefile)  # get program from machine code
+    data_path = DataPath(256, input_file)  # initialize data path
+    cpu = CPU(program=program, data_path=data_path)  # initialize cpu
     cpu.decode()
-    out = cpu.run()
+    out = cpu.run()  # run program
     return out
 
 
