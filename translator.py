@@ -1,16 +1,34 @@
 import re
 import sys
+from enum import unique, Enum
 from ISA import InstructionType, NO_ARGUMENT
+
+
+@unique
+class Section(Enum):
+    DATA = 1
+    TEXT = 2
 
 
 def is_match(re_exp: str, target: str) -> bool:
     return bool(re.search(re_exp, target))
 
 
+def is_valid_variable(line: str) -> bool:
+    if (
+        is_match("^.*: *0 *$", line) or
+        is_match("^.*: *[1-9]+[0-9]* *$", line) or
+        is_match("^.*: *\".*\" *, *[1-9]+[0-9]* *$", line) or
+        is_match("^.*: *\".*\" *$", line)
+    ):
+        return True
+    else:
+        return False
+
+
 def read_variable(line: str) -> tuple[str, str]:
-    assert is_match("^.*: *0 *$", line) or is_match("^.*: *[1-9]+[0-9]* *$", line) or is_match(
-        "^.*: *\".*\" *, *[1-9]+[0-9]* *$", line) or is_match("^.*: *\".*\" *$",
-                                                              line), "Illegal variable {}".format(line)
+    assert is_valid_variable(line), "Illegal variable {}".format(line)
+
     key = line.split(":", 1)[0]
     value = line.split(":", 1)[1]
     if is_match("^.*: *-?[1-9]+[0-9]* *$", line):  # number
@@ -52,7 +70,7 @@ def translate(source_name: str, target_name: str):
     instruction_index = 0
     last_fun = ""
 
-    in_section_data = True
+    section = Section.DATA
     is_first_fun = True
 
     lines_source = open(source_name).read().split('\n')
@@ -65,14 +83,14 @@ def translate(source_name: str, target_name: str):
         if line == "" or line == "\n":  # skip empty line
             continue
         if line.upper() == "SECTION .DATA":
-            in_section_data = True
+            section = Section.DATA
             continue
         if line.upper() == "SECTION .TEXT":
-            in_section_data = False
+            section = Section.TEXT
             continue
 
         # read section data
-        if in_section_data:
+        if section == Section.DATA:
             key, value = read_variable(line)
             key = key.upper()
             assert key != 'INPUT' and key != 'OUTPUT', "Line {}:You can't declare a variable name as INPUT or OUTPUT".format(
@@ -81,7 +99,7 @@ def translate(source_name: str, target_name: str):
             variable[key] = value
 
         # read section text
-        else:
+        if section == Section.TEXT:
             # handle function or label
             if is_match("^\S*:$", line):
                 line = line.upper()
@@ -122,16 +140,16 @@ def translate(source_name: str, target_name: str):
     # write target file
     with open(target_name, "w") as f:
         f.write(result)
-        f.write("FUNCTION\n")
+        f.write("\nFUNCTION\n")
         for i in function_point:
             line = i + ":" + str(function_point[i]) + "\n"
             f.write(line)
-        f.write("LABEL\n")
+        f.write("\nLABEL\n")
         for i in label_in_fun:
             for k in label_in_fun[i]:
                 line = i + ":" + k + ":" + str(label_in_fun[i][k]) + "\n"
                 f.write(line)
-        f.write("VARIABLE\n")
+        f.write("\nVARIABLE\n")
         for i in variable:
             line = i + ":" + variable[i] + "\n"
             f.write(line)

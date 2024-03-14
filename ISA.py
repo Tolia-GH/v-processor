@@ -110,7 +110,7 @@ class Instruction:
 
 
 @unique
-class Position(Enum):
+class CodeType(Enum):
     INS = 1  # instructions
     FUN = 2  # Function
     LAB = 3  # label
@@ -119,45 +119,51 @@ class Position(Enum):
 
 def read_code(filename: str) -> {}:
     program = {'Instruction': [], 'Variable': {}, 'Function': {}}
-    position = Position.INS
-    with open(filename, "r") as f:
-        line = f.readline()
-        assert line != "", "You open a file, whose format is not property"
-        while line:
-            line = line.replace("\n", "")
-            if line == "FUNCTION":
-                position = Position.FUN
-            elif line == "LABEL":
-                position = Position.LAB
-            elif line == "VARIABLE":
-                position = Position.VAR
-            else:
-                ins: Instruction
-                if position == Position.INS:
-                    term = line.split(" ")
-                    ins_type = InstructionType[term[1]]
-                    while "" in term:
-                        term.remove("")
-                    if term[1] == 'HLT':
-                        ins = Instruction(ins_type, [])
-                    else:
-                        ins = Instruction(ins_type, term[2:])
-                    program['Instruction'].append(ins)
-                elif position == Position.FUN:
-                    term = line.split(":")
-                    while "" in term:
-                        term.remove("")
-                    program['Function'][term[0]] = dict()
-                    program['Function'][term[0]]['self'] = int(term[1])
-                elif position == Position.LAB:
-                    term = line.split(":")
-                    while "" in term:
-                        term.remove("")
-                    program['Function'][term[0]][term[1]] = int(term[2])
-                elif position == Position.VAR:
-                    term = line.split(":", 1)
-                    while "" in term:
-                        term.remove("")
-                    program['Variable'][term[0]] = term[1]
-            line = f.readline()
+    code_type = CodeType.INS
+
+    index = 0
+    lines_file = open(filename).read().split('\n')
+
+    # assert line != "", "You open a file, whose format is not property"
+    while index < len(lines_file):
+        line = lines_file[index]
+        index += 1
+
+        if line == "":
+            continue
+        if line == "FUNCTION":
+            code_type = CodeType.FUN
+        elif line == "LABEL":
+            code_type = CodeType.LAB
+        elif line == "VARIABLE":
+            code_type = CodeType.VAR
+        else:
+            ins: Instruction
+            if code_type == CodeType.INS:
+                term = line.split(" ")
+                ins_type = InstructionType[term[1]]
+                while "" in term:
+                    term.remove("")
+                if term[1] == 'HLT':
+                    ins = Instruction(ins_type, [])
+                else:
+                    ins = Instruction(ins_type, term[2:])
+                program['Instruction'].append(ins)
+            elif code_type == CodeType.FUN:
+                term = line.split(":")
+                while "" in term:
+                    term.remove("")
+                program['Function'][term[0]] = dict()
+                program['Function'][term[0]]['self'] = int(term[1])
+            elif code_type == CodeType.LAB:
+                term = line.split(":")
+                while "" in term:
+                    term.remove("")
+                program['Function'][term[0]][term[1]] = int(term[2])
+            elif code_type == CodeType.VAR:
+                term = line.split(":", 1)
+                while "" in term:
+                    term.remove("")
+                program['Variable'][term[0]] = term[1]
+
     return program

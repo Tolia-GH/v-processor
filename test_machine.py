@@ -13,9 +13,9 @@ class MyTest(unittest.TestCase):
     def test_cat(self):
         print("Testing cat")
         translator.translate('./asm/cat.asm', './asm/target')
-        result = machine.start('./asm/target', './asm/test.txt')
+        result = machine.start('./asm/target', 'asm/input.txt')
         text = ''
-        with open('./asm/test.txt') as f:
+        with open('asm/input.txt') as f:
             text = f.read()
         print(text)
         print(result)
